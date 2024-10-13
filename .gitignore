@@ -1,0 +1,14 @@
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+.cache/
+dist/
+build/
+*.log
+.firebase
+
+.env
+.env.*
+/prisma/seed.ts
+/dist

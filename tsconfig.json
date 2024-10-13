@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "CommonJS",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "moduleResolution": "Node",
+    "strict": true /* Enable all strict type-checking options. */, // "noImplicitAny": true,                       /* Raise error on expressions and declarations with an implied 'any' type. */
+    "baseUrl": "." /* Base directory to resolve non-absolute module names. */,
+    "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */, // "preserveSymlinks": true,                    /* Do not resolve the real path of symlinks. */
+    "skipLibCheck": true /* Skip type checking of declaration files. */,
+    "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */,
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "outDir": "dist",
+    "rootDir": ".",
+    "incremental": true,
+    "types": ["node", "express"],
+    "paths": {
+      "@": ["./src"],
+      "@*": ["./src/*"]
+      //   "@src/*": ["./src/*"],
+      // "@utils/*": ["./src/utils/*"],
+      // "@middleware/*": ["./src/middleware/*"],
+      // "@controllers/*": ["./src/controllers/*"],
+      // "@config/*": ["./src/config/*"],
+      // "@database/*": ["./src/database/*"],
+      // "@routes/*": ["./src/routes/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+  // "ts-node": {
+  //   "require": ["tsconfig-paths/register"],
+  //   "esm": true,
+  //   "experimentalSpecifierResolution": "node"
+  // },
+}

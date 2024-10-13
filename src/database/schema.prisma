@@ -1,0 +1,348 @@
+generator prisma {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  user_id                 String                  @id @default(uuid())
+  first_name              String
+  middle_name             String?
+  last_name               String
+  full_name               String
+  role                    UserRoles               @default(user)
+  email                   String                  @unique
+  mobile_no               String?
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  admin_id_seq            AdminIdSeq[]
+  user_id_seq             UserIdSeq[]
+  credentials             Credentials[]
+  created_purchase_orders PurchaseOrders[]
+  batch_orders            BatchOrders[]
+  activity_logs_relations ActivityLogsRelations[]
+  activity_logs           ActivityLogs[]
+  sales                   Sales[]
+}
+
+model Credentials {
+  credential_id           String                  @id @default(uuid())
+  password                String
+  user_id                 String                  @unique
+  user                    Users                   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  last_login_at           DateTime?
+  last_change_password_at DateTime?
+  activity_logs_relations ActivityLogsRelations[]
+}
+
+model Suppliers {
+  supplier_id             String                  @id @default(uuid())
+  id_seq                  Int                     @unique @default(autoincrement())
+  supplier_name           String                  @unique
+  supplier_address        String?
+  contact_name            String
+  contact_no              String
+  contact_email           String?
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  purchase_orders         PurchaseOrders[]
+  activity_logs_relations ActivityLogsRelations[]
+}
+
+model PurchaseOrders {
+  purchase_order_id       String                  @id @default(uuid())
+  id_seq                  Int                     @unique @default(autoincrement())
+  supplier_id             String
+  supplier                Suppliers               @relation(fields: [supplier_id], references: [supplier_id], onDelete: Cascade, onUpdate: Cascade)
+  status                  PurchaseOrderStatus     @default(pending)
+  order_by_user_id        String
+  order_by                Users                   @relation(fields: [order_by_user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  overall_purchase_cost   Float
+  order_date              DateTime                @default(now())
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  purchase_order_details  PurchaseOrderDetails[]
+  activity_logs_relations ActivityLogsRelations[]
+}
+
+model PurchaseOrderDetails {
+  purchase_order_details_id String                  @id @default(uuid())
+  id_seq                    Int                     @unique @default(autoincrement())
+  quantity                  Float
+  cost                      Float
+  inventory_id              String
+  inventory                 Inventories             @relation(fields: [inventory_id], references: [inventory_id], onDelete: Cascade, onUpdate: Cascade)
+  purchase_order_id         String
+  purchase_order            PurchaseOrders          @relation(fields: [purchase_order_id], references: [purchase_order_id], onDelete: Cascade, onUpdate: Cascade)
+  created_at                DateTime                @default(now())
+  updated_at                DateTime                @updatedAt
+  items_stock_in            ItemsStockIn[]
+  activity_logs_relations   ActivityLogsRelations[]
+}
+
+model Inventories {
+  inventory_id            String                  @id @default(uuid())
+  id_seq                  Int                     @unique @default(autoincrement())
+  item_name               String                  @unique
+  item_description        String                  @default("")
+  item_type               ItemTypes               @default(ingredient)
+  item_measurement        Float
+  item_measurement_type   ItemMeasurementTypes
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  items_stock_in          ItemsStockIn[]
+  purchase_order_details  PurchaseOrderDetails[]
+  batch_order_details     BatchOrderDetails[]
+  batch_orders            BatchOrders[]
+  activity_logs_relations ActivityLogsRelations[]
+  sales_order_details     SalesDetails[]
+}
+
+model ItemsStockIn {
+  item_stock_in_id          String                  @id @default(uuid())
+  id_seq                    Int                     @unique @default(autoincrement())
+  quantity                  Float
+  cost                      Float
+  purchase_order_details_id String?                 @unique
+  purchase_order_details    PurchaseOrderDetails?   @relation(fields: [purchase_order_details_id], references: [purchase_order_details_id], onDelete: Cascade, onUpdate: Cascade)
+  batch_order_id            String?                 @unique
+  batch_order               BatchOrders?            @relation(fields: [batch_order_id], references: [batch_order_id], onDelete: Cascade, onUpdate: Cascade)
+  inventory_id              String
+  inventory                 Inventories             @relation(fields: [inventory_id], references: [inventory_id], onDelete: Cascade, onUpdate: Cascade)
+  created_at                DateTime                @default(now())
+  updated_at                DateTime                @updatedAt
+  items_stock_out           ItemsStockOut[]
+  activity_logs_relations   ActivityLogsRelations[]
+}
+
+model ItemsStockOut {
+  item_stock_out_id       String                  @id @default(uuid())
+  id_seq                  Int                     @unique @default(autoincrement())
+  quantity                Float
+  status                  ItemStockOutStatus      @default(pending)
+  item_stock_in_id        String
+  item_stock_in           ItemsStockIn            @relation(fields: [item_stock_in_id], references: [item_stock_in_id], onDelete: Cascade, onUpdate: Cascade)
+  batch_order_details_id  String?
+  batch_order_details     BatchOrderDetails?      @relation(fields: [batch_order_details_id], references: [batch_order_details_id], onDelete: Cascade, onUpdate: Cascade)
+  sales_details_id        String?
+  sales_details           SalesDetails?           @relation(fields: [sales_details_id], references: [sales_details_id], onDelete: Cascade, onUpdate: Cascade)
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  activity_logs_relations ActivityLogsRelations[]
+}
+
+model BatchOrders {
+  batch_order_id                    String                  @id @default(uuid())
+  id_seq                            Int                     @unique @default(autoincrement())
+  inventory_id                      String
+  product                           Inventories             @relation(fields: [inventory_id], references: [inventory_id], onDelete: Cascade, onUpdate: Cascade)
+  order_by_user_id                  String
+  order_by                          Users                   @relation(fields: [order_by_user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  status                            BatchOrderStatus        @default(pending)
+  overall_batch_cost                Float
+  planned_production_quantity       Float
+  planned_estimated_cost_per_bottle Float
+  actual_production_quantity        Float?
+  actual_estimated_cost_per_bottle  Float?
+  processing_start_date             DateTime?
+  processing_end_date               DateTime?
+  planned_date                      DateTime
+  actual_date                       DateTime?
+  created_at                        DateTime                @default(now())
+  updated_at                        DateTime                @updatedAt
+  batch_order_details               BatchOrderDetails[]
+  items_stock_in                    ItemsStockIn?
+  activity_logs_relations           ActivityLogsRelations[]
+}
+
+model BatchOrderDetails {
+  batch_order_details_id  String                  @id @default(uuid())
+  id_seq                  Int                     @unique @default(autoincrement())
+  quantity                Float
+  inventory_id            String
+  inventory               Inventories             @relation(fields: [inventory_id], references: [inventory_id], onDelete: Cascade, onUpdate: Cascade)
+  batch_order_id          String
+  batch_order             BatchOrders             @relation(fields: [batch_order_id], references: [batch_order_id], onDelete: Cascade, onUpdate: Cascade)
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  items_stock_out         ItemsStockOut[]
+  activity_logs_relations ActivityLogsRelations[]
+}
+
+model Sales {
+  sales_id                String                  @id @default(uuid())
+  id_seq                  Int                     @unique @default(autoincrement())
+  created_by_user_id      String
+  created_by              Users                   @relation(fields: [created_by_user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  overall_sales_cost      Float
+  overall_sales_amount    Float
+  total_profit            Float
+  sales_date              DateTime                @default(now())
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  seller_name             String
+  notes                   String?
+  sales_type              SalesTypes
+  status                  SalesStatus             @default(pending)
+  activity_logs_relations ActivityLogsRelations[]
+  sales_details           SalesDetails[]
+}
+
+model SalesDetails {
+  sales_details_id        String                  @id @default(uuid())
+  id_seq                  Int                     @unique @default(autoincrement())
+  quantity                Float
+  amount                  Float
+  inventory_id            String
+  inventory               Inventories             @relation(fields: [inventory_id], references: [inventory_id], onDelete: Cascade, onUpdate: Cascade)
+  sales_id                String
+  sales                   Sales                   @relation(fields: [sales_id], references: [sales_id], onDelete: Cascade, onUpdate: Cascade)
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  items_stock_out         ItemsStockOut[]
+  activity_logs_relations ActivityLogsRelations[]
+}
+
+model ActivityLogs {
+  activity_logs_id        String                  @id @default(uuid())
+  action_type             ActionTypes
+  action_status           ActionStatus
+  updated_fields          Json?
+  timestamp               DateTime                @default(now())
+  error                   String?
+  user_id                 String
+  actor                   Users                   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  activity_logs_relations ActivityLogsRelations[]
+}
+
+model ActivityLogsRelations {
+  activity_logs_relations_id String                @id @default(uuid())
+  activity_logs_id           String?
+  activity_logs              ActivityLogs?         @relation(fields: [activity_logs_id], references: [activity_logs_id], onDelete: Cascade)
+  user_id                    String?
+  user                       Users?                @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  credential_id              String?
+  credential                 Credentials?          @relation(fields: [credential_id], references: [credential_id], onDelete: SetNull)
+  supplier_id                String?
+  supplier                   Suppliers?            @relation(fields: [supplier_id], references: [supplier_id], onDelete: SetNull)
+  purchase_order_id          String?
+  purchase_order             PurchaseOrders?       @relation(fields: [purchase_order_id], references: [purchase_order_id], onDelete: SetNull)
+  purchase_order_details_id  String?
+  purchase_order_details     PurchaseOrderDetails? @relation(fields: [purchase_order_details_id], references: [purchase_order_details_id], onDelete: SetNull)
+  inventory_id               String?
+  inventory                  Inventories?          @relation(fields: [inventory_id], references: [inventory_id], onDelete: SetNull)
+  item_stock_in_id           String?
+  item_stock_in              ItemsStockIn?         @relation(fields: [item_stock_in_id], references: [item_stock_in_id], onDelete: SetNull)
+  item_stock_out_id          String?
+  item_stock_out             ItemsStockOut?        @relation(fields: [item_stock_out_id], references: [item_stock_out_id], onDelete: SetNull)
+  batch_order_id             String?
+  batch_order                BatchOrders?          @relation(fields: [batch_order_id], references: [batch_order_id], onDelete: SetNull)
+  batch_order_details_id     String?
+  batch_order_details        BatchOrderDetails?    @relation(fields: [batch_order_details_id], references: [batch_order_details_id], onDelete: SetNull)
+  sales_id                   String?
+  sales                      Sales?                @relation(fields: [sales_id], references: [sales_id], onDelete: SetNull)
+  sales_details_id           String?
+  sales_details              SalesDetails?         @relation(fields: [sales_details_id], references: [sales_details_id], onDelete: SetNull)
+}
+
+enum ActionStatus {
+  success
+  failed
+}
+
+enum ActionTypes {
+  get
+  post
+  update
+  patch
+  delete
+}
+
+enum UserRoles {
+  user
+  admin
+  superadmin
+}
+
+enum PurchaseOrderStatus {
+  pending
+  returned
+  cancelled
+  completed
+}
+
+enum BatchOrderStatus {
+  pending
+  in_progress
+  returned
+  cancelled
+  completed
+}
+
+enum SalesStatus {
+  pending
+  shipped
+  returned
+  cancelled
+  refunded
+  completed
+}
+
+enum SalesTypes {
+  walk_in
+  shopee
+  lazada
+  tiktok
+  facebook
+}
+
+enum ItemTypes {
+  product
+  equipment
+  ingredient
+  cleaning_material
+}
+
+enum ItemMeasurementTypes {
+  kg
+  g
+  mg
+  t
+  lb
+  oz
+  L
+  mL
+  gal
+}
+
+enum ItemStockOutStatus {
+  pending
+  returned
+  used
+}
+
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+}
+
+model UserIdSeq {
+  id      Int    @id @default(autoincrement())
+  user_id String
+  user    Users  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model AdminIdSeq {
+  id      Int    @id @default(autoincrement())
+  user_id String
+  user    Users  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+}
